@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão Financeira - Condomínio Edifício Ângela 2026/2027</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- jsPDF & AutoTable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f1f5f9;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Tela de Login -->
+  <div id="login-screen" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-md w-full p-8 transition-all">
+      <div class="text-center mb-6">
+        <div class="bg-blue-100 text-blue-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold shadow-inner">
+          <i class="fa-solid fa-building"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">Edifício Ângela</h2>
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-1">Gestão Financeira do Condomínio</p>
+      </div>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Usuário de Acesso</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <i class="fa-solid fa-user"></i>
+            </span>
+            <input type="text" id="username" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all outline-none" placeholder="Informe seu usuário" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Senha de Segurança</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <i class="fa-solid fa-lock"></i>
+            </span>
+            <input type="password" id="password" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-all outline-none" placeholder="••••••••" required>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> Acessar Sistema
+        </button>
+
+        <div id="login-error" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium text-center flex items-center justify-center gap-2">
+          <i class="fa-solid fa-circle-exclamation"></i> Usuário ou senha incorretos.
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Interface Principal -->
+  <div id="app-screen" class="hidden min-h-screen flex flex-col">
+    <!-- Header Principal -->
+    <header class="bg-slate-900 text-white shadow-lg border-b border-slate-800 sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="p-2.5 bg-blue-700 rounded-xl text-white shadow">
+            <i class="fa-solid fa-building-user text-xl"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-lg leading-tight tracking-wide text-white">Condomínio Edifício Ângela</h1>
+            <div class="flex items-center gap-2 text-xs text-slate-300 mt-0.5">
+              <span>Controle Financeiro Mensal</span>
+              <span>•</span>
+              <span id="system-version" class="bg-slate-800 border border-slate-700 px-2 py-0.5 rounded-full font-mono text-blue-300"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex items-center gap-2 text-xs bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700">
+            <i class="fa-solid fa-user-check text-emerald-400"></i>
+            <span>Gestor: <strong class="text-white">Geraldo</strong></span>
+          </div>
+          <button id="btn-logout" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-xs font-semibold shadow transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-power-off"></i>
+            <span>Sair com Segurança</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Seletor de Meses Subsequentes (Set/2026 até Dez/2027) -->
+    <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[65px] z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between overflow-x-auto gap-3">
+        <div class="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider shrink-0">
+          <i class="fa-solid fa-calendar-week text-blue-700 text-sm"></i>
+          <span>Mês de Referência:</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 pb-1" id="month-buttons-container">
+          <!-- Botões dos Meses Inseridos via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+      <!-- Cards de Resumo Financeiro -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total das Despesas (<span class="selected-month-label"></span>)</p>
+            <p id="card-total-month" class="text-2xl font-black text-slate-900 mt-1">R$ 0,00</p>
+          </div>
+          <div class="p-3 bg-blue-50 text-blue-700 rounded-xl">
+            <i class="fa-solid fa-calculator text-2xl"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Quitado (Pago)</p>
+            <p id="card-total-paid" class="text-2xl font-black text-emerald-600 mt-1">R$ 0,00</p>
+          </div>
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+            <i class="fa-solid fa-circle-check text-2xl"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Pendente</p>
+            <p id="card-total-pending" class="text-2xl font-black text-amber-600 mt-1">R$ 0,00</p>
+          </div>
+          <div class="p-3 bg-amber-50 text-amber-600 rounded-xl">
+            <i class="fa-solid fa-clock text-2xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulário de Novo Pagamento -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+          <i class="fa-solid fa-plus-circle text-blue-700 text-lg"></i>
+          <h2 class="text-base font-bold text-slate-800">Incluir Novo Pagamento / Despesa em <span class="selected-month-label text-blue-700"></span></h2>
+        </div>
+
+        <form id="payment-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Descrição da Despesa</label>
+            <input type="text" id="pay-desc" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="Ex: Transporte Uber" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Valor Total (R$)</label>
+            <input type="number" step="0.01" id="pay-val" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" placeholder="0.00" required>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Data de Vencimento</label>
+            <input type="date" id="pay-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm text-slate-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" required>
+          </div>
+
+          <div>
+            <button type="submit" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold rounded-lg shadow-sm transition-all text-sm flex items-center justify-center gap-2">
+              <i class="fa-solid fa-save"></i>
+              <span>Salvar Lançamento</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tabela de Lançamentos do Mês -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-blue-700 text-lg"></i>
+            <h2 class="text-base font-bold text-slate-800">Lançamentos Financeiros — <span class="selected-month-label text-blue-700"></span></h2>
+          </div>
+
+          <button onclick="generatePDF()" class="px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-sm"></i>
+            <span>Exportar Relatório PDF (<span class="selected-month-label"></span>)</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-xs tracking-wider">
+                <th class="py-3 px-4 font-semibold">Descrição do Pagamento</th>
+                <th class="py-3 px-4 font-semibold">Valor (R$)</th>
+                <th class="py-3 px-4 font-semibold">Vencimento</th>
+                <th class="py-3 px-4 font-semibold text-center">Status Pagamento</th>
+                <th class="py-3 px-4 font-semibold text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="payment-table-body" class="divide-y divide-slate-200 text-sm">
+              <!-- Linhas geradas via JS -->
+            </tbody>
+            <tfoot>
+              <tr class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+                <td class="py-3.5 px-4 uppercase text-xs tracking-wider">TOTAL <span class="selected-month-label"></span></td>
+                <td id="total-amount" class="py-3.5 px-4 text-blue-800 font-black">R$ 0,00</td>
+                <td colspan="3" class="py-3.5 px-4 text-right text-xs text-slate-500 font-normal">
+                  Os dados do mês são armazenados de forma independente.
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- Gerenciador de Diretórios e Mídias por Mês de Referência -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <div class="flex items-center justify-between flex-wrap gap-4 mb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-folder-open text-blue-700 text-lg"></i>
+            <h2 class="text-base font-bold text-slate-800">Mídias e Comprovantes de <span class="selected-month-label text-blue-700"></span></h2>
+          </div>
+
+          <button onclick="downloadAllFilesForContabilidade()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-zipper"></i>
+            <span>Baixar Comprovantes de <span class="selected-month-label"></span> para Contabilidade</span>
+          </button>
+        </div>
+        <p class="text-xs text-slate-500 mb-6">Exibição e salvamento isolados para o mês selecionado. Alterne o mês acima para consultar outros comprovantes.</p>
+
+        <!-- Abas de Navegação de Diretórios -->
+        <div class="flex flex-wrap gap-2 border-b border-slate-200 mb-6">
+          <button class="tab-btn py-2.5 px-4 border-b-2 font-semibold text-sm transition-all flex items-center gap-2 text-blue-700 border-blue-700" onclick="switchDirectory('Comprovantes de Pagamento', this)">
+            <i class="fa-solid fa-receipt"></i> Comprovantes de Pagamento
+          </button>
+          <button class="tab-btn py-2.5 px-4 border-b-2 font-medium text-sm transition-all flex items-center gap-2 text-slate-500 border-transparent hover:text-slate-800" onclick="switchDirectory('Notas Fiscais e Recibos', this)">
+            <i class="fa-solid fa-file-invoice-dollar"></i> Notas Fiscais e Recibos
+          </button>
+          <button class="tab-btn py-2.5 px-4 border-b-2 font-medium text-sm transition-all flex items-center gap-2 text-slate-500 border-transparent hover:text-slate-800" onclick="switchDirectory('Manutenções e Obras', this)">
+            <i class="fa-solid fa-screwdriver-wrench"></i> Manutenções e Obras
+          </button>
+        </div>
+
+        <!-- Form para Acrescentar Documentos -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+          <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+            Anexar Documento em <span class="selected-month-label text-blue-700"></span> | Diretório: <span id="current-dir-label" class="text-blue-700">Comprovantes de Pagamento</span>
+          </h3>
+          <form id="upload-form" class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+            <div class="sm:col-span-4">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Descrição do Documento</label>
+              <input type="text" id="doc-title" placeholder="Ex: Comprovante Uber / Copasa / FGTS" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-600 bg-white" required>
+            </div>
+            
+            <div class="sm:col-span-4">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Associar ao Lançamento de <span class="selected-month-label"></span></label>
+              <select id="doc-receipt-assoc" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-600 bg-white font-medium text-slate-700">
+                <!-- Opções de Recibos/Pagamentos gerados via JS -->
+              </select>
+            </div>
+
+            <div class="sm:col-span-4">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Selecione o Arquivo</label>
+              <input type="file" id="doc-file" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border border-slate-300 rounded-lg bg-white" required>
+            </div>
+
+            <div class="sm:col-span-12 flex justify-end mt-2">
+              <button type="submit" class="px-5 py-2.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-upload"></i>
+                <span>Anexar e Salvar em <span class="selected-month-label"></span></span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Grade de Arquivos do Diretório -->
+        <div>
+          <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider mb-3">
+            Mídias Salvas em <span class="selected-month-label text-blue-700"></span>
+          </h3>
+          <div id="file-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <!-- Cards de Mídia/Documentos inseridos dinamicamente -->
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-4 text-center text-xs border-t border-slate-800">
+      <p>Condomínio Edifício Ângela &copy; 2026/2027 — Gestor Financeiro: Geraldo</p>
+    </footer>
+  </div>
+
+  <script>
+    const PAYMENTS_STORAGE_KEY = 'CONDOMINIO_ANGELA_PAYMENTS_PERMANENT_V11';
+    const FILES_STORAGE_KEY = 'CONDOMINIO_ANGELA_FILES_PERMANENT_V11';
+
+    // Chaves antigas para recuperação automática de dados
+    const OLD_PAYMENT_KEYS = [
+      'CONDOMINIO_ANGELA_PAYMENTS_MASTER_V10',
+      'CONDOMINIO_ANGELA_PAYMENTS_MASTER_V9',
+      'CONDOMINIO_ANGELA_PAYMENTS_MASTER',
+      'CONDOMINIO_ANGELA_DATA_2026_V7_DOWNLOADS_ENABLED'
+    ];
+
+    const OLD_FILE_KEYS = [
+      'CONDOMINIO_ANGELA_FILES_MASTER_V10',
+      'CONDOMINIO_ANGELA_FILES_MASTER_V9',
+      'CONDOMINIO_ANGELA_FILES_MONTHLY_V8',
+      'CONDOMINIO_ANGELA_FILES_MASTER',
+      'CONDOMINIO_ANGELA_DATA_2026_V7_DOWNLOADS_ENABLED'
+    ];
+
+    function setSystemVersion() {
+      const now = new Date();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const yy = String(now.getFullYear()).slice(-2);
+      document.getElementById('system-version').innerText = `v${mm}/${dd}/${yy}`;
+    }
+
+    const availableMonths = [
+      { key: 'Set/2026', label: 'Setembro / 2026' },
+      { key: 'Out/2026', label: 'Outubro / 2026' },
+      { key: 'Nov/2026', label: 'Novembro / 2026' },
+      { key: 'Dez/2026', label: 'Dezembro / 2026' },
+      { key: 'Jan/2027', label: 'Janeiro / 2027' },
+      { key: 'Fev/2027', label: 'Fevereiro / 2027' },
+      { key: 'Mar/2027', label: 'Março / 2027' },
+      { key: 'Abr/2027', label: 'Abril / 2027' },
+      { key: 'Mai/2027', label: 'Maio / 2027' },
+      { key: 'Jun/2027', label: 'Junho / 2027' },
+      { key: 'Jul/2027', label: 'Julho / 2027' },
+      { key: 'Ago/2027', label: 'Agosto / 2027' },
+      { key: 'Set/2027', label: 'Setembro / 2027' },
+      { key: 'Out/2027', label: 'Outubro / 2027' },
+      { key: 'Nov/2027', label: 'Novembro / 2027' },
+      { key: 'Dez/2027', label: 'Dezembro / 2027' }
+    ];
+
+    let currentMonthKey = 'Set/2026';
+
+    const initialPaymentsData = {
+      'Set/2026': [
+        { id: 1, desc: 'Copasa', val: 1942.73, date: '2026-09-30', status: 'Pendente' },
+        { id: 2, desc: 'Férias funcionária', val: 1206.68, date: '2026-09-29', status: 'Pendente' },
+        { id: 3, desc: 'Salário', val: 905.01, date: '2026-10-05', status: 'Pendente' },
+        { id: 4, desc: 'Despesa tinta anti-ferrugem', val: 35.00, date: '2026-09-15', status: 'Pago' },
+        { id: 5, desc: 'Cemig', val: 273.37, date: '2026-09-10', status: 'Pago' },
+        { id: 6, desc: 'FGTS', val: 78.27, date: '2026-09-04', status: 'Pago' },
+        { id: 7, desc: 'GPS', val: 332.60, date: '2026-09-30', status: 'Pendente' },
+        { id: 8, desc: 'Pagto Contador', val: 375.00, date: '2026-09-11', status: 'Pago' },
+        { id: 9, desc: 'Pgto Mão de Obra Telhado', val: 1600.00, date: '2026-09-10', status: 'Pago' },
+        { id: 10, desc: 'Pgto Internet condomínio', val: 158.00, date: '2026-09-24', status: 'Pendente' },
+        { id: 11, desc: 'Pagto Sinalizador de garagem', val: 223.59, date: '2026-09-17', status: 'Pago' },
+        { id: 12, desc: 'Pagto Material de limpeza reposição', val: 15.00, date: '2026-09-11', status: 'Pago' },
+        { id: 13, desc: 'Pagto Material de limpeza reposição', val: 226.36, date: '2026-09-11', status: 'Pago' },
+        { id: 14, desc: 'Pagto Material de limpeza reposição', val: 40.37, date: '2026-09-08', status: 'Pago' },
+        { id: 15, desc: 'Transporte Uber - Corrida 01', val: 25.50, date: '2026-09-05', status: 'Pago' },
+        { id: 16, desc: 'Transporte Uber - Corrida 02', val: 32.80, date: '2026-09-12', status: 'Pago' },
+        { id: 17, desc: 'Transporte Uber - Corrida 03', val: 28.90, date: '2026-09-18', status: 'Pago' },
+        { id: 18, desc: 'Transporte Uber - Corrida 04', val: 30.00, date: '2026-09-22', status: 'Pago' }
+      ],
+      'Out/2026': [
+        { id: 101, desc: 'Copasa Estimada', val: 1950.00, date: '2026-10-30', status: 'Pendente' },
+        { id: 102, desc: 'Cemig Estimada', val: 280.00, date: '2026-10-10', status: 'Pendente' },
+        { id: 103, desc: 'Salário Funcionária', val: 1500.00, date: '2026-10-05', status: 'Pendente' },
+        { id: 104, desc: 'Pagto Contador', val: 375.00, date: '2026-10-11', status: 'Pendente' }
+      ]
+    };
+
+    const initialMonthlyDirectoryData = {
+      'Set/2026': {
+        'Comprovantes de Pagamento': [
+          { id: 101, name: 'Comprovante_Copasa_Set2026.pdf', date: '30/09/2026', assoc: 'Copasa (R$ 1942.73)', dataUrl: '' },
+          { id: 102, name: 'Recibo_MaoDeObra_Telhado.pdf', date: '10/09/2026', assoc: 'Pgto Mão de Obra Telhado (R$ 1600.00)', dataUrl: '' },
+          { id: 103, name: 'comprovante2026-09-04_085652.pdf', date: '04/09/2026', assoc: 'FGTS (R$ 78.27)', dataUrl: '' }
+        ],
+        'Notas Fiscais e Recibos': [
+          { id: 201, name: 'NF_Sinalizador_Garagem.pdf', date: '17/09/2026', assoc: 'Pagto Sinalizador de garagem (R$ 223.59)', dataUrl: '' },
+          { id: 202, name: 'NF_Material_Limpeza.pdf', date: '11/09/2026', assoc: 'Pagto Material de limpeza reposição (R$ 226.36)', dataUrl: '' }
+        ],
+        'Manutenções e Obras': [
+          { id: 301, name: 'Relatorio_Infiltracao_Telhado.jpg', date: '05/09/2026', assoc: 'Pgto Mão de Obra Telhado (R$ 1600.00)', dataUrl: '' }
+        ]
+      }
+    };
+
+    let monthlyPayments = {};
+    let monthlyFilesData = {};
+
+    // Sincroniza em tempo real as entradas de texto/valor da tabela antes de re-renderizar ou salvar
+    function syncTableInputsToState() {
+      const tbody = document.getElementById('payment-table-body');
+      if (!tbody) return;
+      const list = monthlyPayments[currentMonthKey] || [];
+
+      list.forEach(p => {
+        const valInput = document.getElementById(`pay-val-input-${p.id}`);
+        const dateInput = document.getElementById(`pay-date-input-${p.id}`);
+
+        if (valInput) {
+          const parsed = parseFloat(valInput.value);
+          if (!isNaN(parsed) && parsed >= 0) {
+            p.val = parsed;
+          }
+        }
+        if (dateInput && dateInput.value) {
+          p.date = dateInput.value;
+        }
+      });
+    }
+
+    function loadData() {
+      // 1. Carregar e Migrar Pagamentos
+      let savedPayments = localStorage.getItem(PAYMENTS_STORAGE_KEY);
+      if (!savedPayments) {
+        for (const oldKey of OLD_PAYMENT_KEYS) {
+          const item = localStorage.getItem(oldKey);
+          if (item) {
+            try {
+              const parsed = JSON.parse(item);
+              if (parsed && Object.keys(parsed).length > 0) {
+                savedPayments = item;
+                break;
+              }
+            } catch(e){}
+          }
+        }
+      }
+
+      if (savedPayments) {
+        try {
+          monthlyPayments = JSON.parse(savedPayments);
+        } catch(e) {
+          monthlyPayments = JSON.parse(JSON.stringify(initialPaymentsData));
+        }
+      } else {
+        monthlyPayments = JSON.parse(JSON.stringify(initialPaymentsData));
+      }
+      saveData();
+
+      // 2. Carregar e Migrar Ficheiros / Mídias
+      let savedFiles = localStorage.getItem(FILES_STORAGE_KEY);
+      if (!savedFiles) {
+        monthlyFilesData = JSON.parse(JSON.stringify(initialMonthlyDirectoryData));
+        OLD_FILE_KEYS.forEach(oldKey => {
+          const oldRaw = localStorage.getItem(oldKey);
+          if (oldRaw) {
+            try {
+              const oldParsed = JSON.parse(oldRaw);
+              if (oldParsed['Comprovantes de Pagamento'] || oldParsed['Notas Fiscais e Recibos']) {
+                Object.keys(oldParsed).forEach(dir => {
+                  if (Array.isArray(oldParsed[dir])) {
+                    if (!monthlyFilesData['Set/2026']) {
+                      monthlyFilesData['Set/2026'] = { 'Comprovantes de Pagamento': [], 'Notas Fiscais e Recibos': [], 'Manutenções e Obras': [] };
+                    }
+                    oldParsed[dir].forEach(f => {
+                      if (!monthlyFilesData['Set/2026'][dir].some(existing => existing.name === f.name || existing.id === f.id)) {
+                        monthlyFilesData['Set/2026'][dir].push(f);
+                      }
+                    });
+                  }
+                });
+              } else if (oldParsed['Set/2026']) {
+                Object.keys(oldParsed).forEach(m => {
+                  if (!monthlyFilesData[m]) {
+                    monthlyFilesData[m] = { 'Comprovantes de Pagamento': [], 'Notas Fiscais e Recibos': [], 'Manutenções e Obras': [] };
+                  }
+                  Object.keys(oldParsed[m]).forEach(dir => {
+                    if (Array.isArray(oldParsed[m][dir])) {
+                      oldParsed[m][dir].forEach(f => {
+                        if (!monthlyFilesData[m][dir].some(existing => existing.name === f.name || existing.id === f.id)) {
+                          monthlyFilesData[m][dir].push(f);
+                        }
+                      });
+                    }
+                  });
+                });
+              }
+            } catch(e) { }
+          }
+        });
+      } else {
+        try {
+          monthlyFilesData = JSON.parse(savedFiles);
+        } catch(e) {
+          monthlyFilesData = JSON.parse(JSON.stringify(initialMonthlyDirectoryData));
+        }
+      }
+      saveFilesData();
+    }
+
+    function saveData() {
+      localStorage.setItem(PAYMENTS_STORAGE_KEY, JSON.stringify(monthlyPayments));
+    }
+
+    function saveFilesData() {
+      localStorage.setItem(FILES_STORAGE_KEY, JSON.stringify(monthlyFilesData));
+    }
+
+    // Autenticação
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const user = document.getElementById('username').value.trim().toLowerCase();
+      const pass = document.getElementById('password').value.trim();
+
+      if (user === 'geraldo' && pass === '2026') {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        loadData();
+        setSystemVersion();
+        renderMonthButtons();
+        selectMonth('Set/2026');
+      } else {
+        document.getElementById('login-error').classList.remove('hidden');
+      }
+    });
+
+    // Logout
+    document.getElementById('btn-logout').addEventListener('click', function() {
+      syncTableInputsToState();
+      saveData();
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('login-error').classList.add('hidden');
+    });
+
+    function renderMonthButtons() {
+      const container = document.getElementById('month-buttons-container');
+      container.innerHTML = '';
+
+      availableMonths.forEach(m => {
+        const btn = document.createElement('button');
+        btn.id = `btn-month-${m.key.replace('/', '-')}`;
+        btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0";
+        btn.onclick = () => selectMonth(m.key);
+        btn.innerHTML = `<i class="fa-solid fa-calendar-day text-[10px]"></i> ${m.key}`;
+        container.appendChild(btn);
+      });
+    }
+
+    function selectMonth(key) {
+      syncTableInputsToState();
+      saveData();
+
+      currentMonthKey = key;
+      const monthObj = availableMonths.find(m => m.key === key);
+      
+      document.querySelectorAll('.selected-month-label').forEach(el => {
+        el.innerText = monthObj ? monthObj.label : key;
+      });
+
+      availableMonths.forEach(m => {
+        const btn = document.getElementById(`btn-month-${m.key.replace('/', '-')}`);
+        if (btn) {
+          if (m.key === key) {
+            btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all border bg-blue-700 text-white border-blue-800 shadow-md shrink-0";
+          } else {
+            btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200 shrink-0";
+          }
+        }
+      });
+
+      renderPayments();
+      populateReceiptSelect();
+      renderFiles();
+    }
+
+    function formatMoney(value) {
+      return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderPayments() {
+      const tbody = document.getElementById('payment-table-body');
+      tbody.innerHTML = '';
+
+      const list = monthlyPayments[currentMonthKey] || [];
+      let total = 0;
+      let totalPaid = 0;
+      let totalPending = 0;
+
+      if (list.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center py-6 text-slate-400 text-xs">
+              Nenhum lançamento efetuado para <strong>${currentMonthKey}</strong>. Utilize o formulário acima para adicionar despesas.
+            </td>
+          </tr>`;
+      } else {
+        list.forEach((p) => {
+          total += p.val;
+          if (p.status === 'Pago') {
+            totalPaid += p.val;
+          } else {
+            totalPending += p.val;
+          }
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50/80 transition-colors";
+          
+          const isPaid = p.status === 'Pago';
+          const badgeColor = isPaid 
+            ? 'bg-emerald-100 text-emerald-800 border-emerald-200' 
+            : 'bg-amber-100 text-amber-800 border-amber-200';
+
+          tr.innerHTML = `
+            <td class="py-3 px-4 font-medium text-slate-800">
+              <div class="flex items-center justify-between gap-2">
+                <span id="pay-desc-display-${p.id}">${p.desc}</span>
+                <button onclick="editPaymentDesc(${p.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold flex items-center gap-1" title="Alterar Nome do Pagamento">
+                  <i class="fa-solid fa-pen"></i> Editar
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-4 font-semibold text-slate-900">
+              <div class="flex items-center gap-1">
+                <span class="text-xs text-slate-400 font-bold">R$</span>
+                <input type="number" step="0.01" id="pay-val-input-${p.id}" value="${p.val.toFixed(2)}" onblur="updateValue(${p.id}, this.value)" onchange="updateValue(${p.id}, this.value)" class="w-28 px-2 py-1 border border-slate-300 rounded text-xs bg-slate-50 focus:bg-white outline-none focus:ring-1 focus:ring-blue-600 font-semibold text-slate-900">
+              </div>
+            </td>
+            <td class="py-3 px-4">
+              <input type="date" id="pay-date-input-${p.id}" value="${p.date}" onchange="updateDate(${p.id}, this.value)" class="px-2 py-1 border border-slate-300 rounded text-xs bg-slate-50 focus:bg-white outline-none focus:ring-1 focus:ring-blue-600">
+            </td>
+            <td class="py-3 px-4 text-center">
+              <button onclick="toggleStatus(${p.id})" class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} inline-flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer shadow-sm">
+                <i class="fa-solid ${isPaid ? 'fa-circle-check text-emerald-600' : 'fa-clock text-amber-600'}"></i>
+                <span>${p.status}</span>
+              </button>
+            </td>
+            <td class="py-3 px-4 text-right">
+              <button onclick="deletePayment(${p.id})" class="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-semibold transition-colors border border-red-200" title="Excluir Lançamento">
+                <i class="fa-solid fa-trash-can"></i> Excluir
+              </button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('total-amount').innerText = formatMoney(total);
+      document.getElementById('card-total-month').innerText = formatMoney(total);
+      document.getElementById('card-total-paid').innerText = formatMoney(totalPaid);
+      document.getElementById('card-total-pending').innerText = formatMoney(totalPending);
+    }
+
+    function editPaymentDesc(id) {
+      syncTableInputsToState();
+      const list = monthlyPayments[currentMonthKey] || [];
+      const item = list.find(p => p.id === id);
+      if (!item) return;
+
+      const newDesc = prompt("Informe a nova descrição/nome para este pagamento:", item.desc);
+      if (newDesc !== null && newDesc.trim() !== "") {
+        item.desc = newDesc.trim();
+        saveData();
+        renderPayments();
+        populateReceiptSelect();
+      }
+    }
+
+    function populateReceiptSelect() {
+      const select = document.getElementById('doc-receipt-assoc');
+      select.innerHTML = '<option value="Sem Associação / Geral">-- Selecionar Recibo de Pagamento --</option>';
+      
+      const list = monthlyPayments[currentMonthKey] || [];
+      list.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = `${p.desc} (R$ ${p.val.toFixed(2)})`;
+        opt.innerText = `${p.desc} - R$ ${p.val.toFixed(2)} [${p.status}]`;
+        select.appendChild(opt);
+      });
+    }
+
+    function updateValue(id, newVal) {
+      const parsedVal = parseFloat(newVal);
+      if (isNaN(parsedVal) || parsedVal < 0) return;
+      const list = monthlyPayments[currentMonthKey] || [];
+      const item = list.find(p => p.id === id);
+      if (item) {
+        item.val = parsedVal;
+        saveData();
+        // Atualiza totais sem reconstruir a tabela inteira para não perder o foco
+        let total = 0, totalPaid = 0, totalPending = 0;
+        list.forEach(p => {
+          total += p.val;
+          if (p.status === 'Pago') totalPaid += p.val;
+          else totalPending += p.val;
+        });
+        document.getElementById('total-amount').innerText = formatMoney(total);
+        document.getElementById('card-total-month').innerText = formatMoney(total);
+        document.getElementById('card-total-paid').innerText = formatMoney(totalPaid);
+        document.getElementById('card-total-pending').innerText = formatMoney(totalPending);
+        populateReceiptSelect();
+      }
+    }
+
+    function toggleStatus(id) {
+      syncTableInputsToState();
+      const list = monthlyPayments[currentMonthKey] || [];
+      const item = list.find(p => p.id === id);
+      if (item) {
+        item.status = item.status === 'Pago' ? 'Pendente' : 'Pago';
+        saveData();
+        renderPayments();
+        populateReceiptSelect();
+      }
+    }
+
+    function updateDate(id, newDate) {
+      const list = monthlyPayments[currentMonthKey] || [];
+      const item = list.find(p => p.id === id);
+      if (item) {
+        item.date = newDate;
+        saveData();
+      }
+    }
+
+    function deletePayment(id) {
+      syncTableInputsToState();
+      if (confirm('Deseja realmente excluir este lançamento do mês atual?')) {
+        monthlyPayments[currentMonthKey] = (monthlyPayments[currentMonthKey] || []).filter(p => p.id !== id);
+        saveData();
+        renderPayments();
+        populateReceiptSelect();
+      }
+    }
+
+    document.getElementById('payment-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      // Sincroniza qualquer alteração aberta na tabela de pagamentos antes de criar a nova entrada
+      syncTableInputsToState();
+
+      const desc = document.getElementById('pay-desc').value.trim();
+      const val = parseFloat(document.getElementById('pay-val').value);
+      const date = document.getElementById('pay-date').value;
+
+      if (!monthlyPayments[currentMonthKey]) {
+        monthlyPayments[currentMonthKey] = [];
+      }
+
+      monthlyPayments[currentMonthKey].push({
+        id: Date.now(),
+        desc,
+        val,
+        date,
+        status: 'Pendente'
+      });
+
+      saveData();
+      renderPayments();
+      populateReceiptSelect();
+
+      document.getElementById('pay-desc').value = '';
+      document.getElementById('pay-val').value = '';
+      document.getElementById('pay-date').value = '';
+    });
+
+    let activeDirectory = 'Comprovantes de Pagamento';
+
+    function switchDirectory(dirName, btnElement) {
+      activeDirectory = dirName;
+      document.getElementById('current-dir-label').innerText = dirName;
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-blue-700', 'border-blue-700', 'font-semibold');
+        btn.classList.add('text-slate-500', 'border-transparent', 'font-medium');
+      });
+
+      if (btnElement) {
+        btnElement.classList.remove('text-slate-500', 'border-transparent', 'font-medium');
+        btnElement.classList.add('text-blue-700', 'border-blue-700', 'font-semibold');
+      }
+
+      renderFiles();
+    }
+
+    function renderFiles() {
+      const container = document.getElementById('file-container');
+      container.innerHTML = '';
+
+      if (!monthlyFilesData[currentMonthKey]) {
+        monthlyFilesData[currentMonthKey] = {
+          'Comprovantes de Pagamento': [],
+          'Notas Fiscais e Recibos': [],
+          'Manutenções e Obras': []
+        };
+      }
+
+      const files = monthlyFilesData[currentMonthKey][activeDirectory] || [];
+
+      if (files.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+            <i class="fa-solid fa-folder-open text-slate-300 text-3xl mb-2"></i>
+            <p class="text-xs text-slate-500 font-medium">Nenhum arquivo inserido em <strong>${currentMonthKey}</strong> para este diretório.</p>
+          </div>`;
+        return;
+      }
+
+      files.forEach(file => {
+        const isPdf = file.name.toLowerCase().endsWith('.pdf');
+        const iconClass = isPdf ? 'fa-file-pdf text-red-500' : 'fa-file-image text-blue-500';
+
+        const card = document.createElement('div');
+        card.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-blue-300 transition-all";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-start gap-3 mb-2">
+              <div class="p-2.5 bg-slate-100 rounded-lg text-lg">
+                <i class="fa-solid ${iconClass}"></i>
+              </div>
+              <div class="overflow-hidden flex-1">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Descrição do Documento</span>
+                  <button onclick="editDocTitle(${file.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold flex items-center gap-1" title="Alterar Descrição do Documento">
+                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                  </button>
+                </div>
+                <h4 class="text-xs font-bold text-slate-800 truncate" id="doc-title-display-${file.id}" title="${file.name}">${file.name}</h4>
+                <p class="text-[10px] text-slate-400 mt-0.5">Anexado em: ${file.date} (${currentMonthKey})</p>
+              </div>
+            </div>
+            
+            <div class="my-2 p-2 bg-blue-50/80 rounded-lg border border-blue-100">
+              <p class="text-[10px] font-bold text-blue-900 uppercase tracking-wider">Recibo / Lançamento Associado:</p>
+              <p class="text-xs font-semibold text-blue-700 truncate"><i class="fa-solid fa-link text-[10px] mr-1"></i> ${file.assoc || 'Sem associação'}</p>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-1.5 pt-2 border-t border-slate-100 mt-2">
+            <button onclick="viewMedia('${file.name}', '${file.assoc}')" class="flex-1 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[11px] font-semibold transition-colors flex items-center justify-center gap-1">
+              <i class="fa-solid fa-eye"></i> Visualizar
+            </button>
+
+            <button onclick="downloadSingleFile('${file.id}')" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded text-[11px] font-semibold transition-colors border border-emerald-200 flex items-center gap-1" title="Baixar Comprovante para Contabilidade">
+              <i class="fa-solid fa-download"></i> Baixar
+            </button>
+
+            <button onclick="removeFile(${file.id})" class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[11px] transition-colors border border-red-100" title="Excluir/Retificar">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function editDocTitle(fileId) {
+      const files = monthlyFilesData[currentMonthKey][activeDirectory] || [];
+      const file = files.find(f => f.id == fileId);
+      
+      if (!file) return;
+
+      const newTitle = prompt("Informe a nova descrição para este documento:", file.name);
+      
+      if (newTitle !== null && newTitle.trim() !== "") {
+        file.name = newTitle.trim();
+        saveFilesData();
+        renderFiles();
+      }
+    }
+
+    function viewMedia(fileName, assocName) {
+      alert(`[VISUALIZAÇÃO DE MÍDIA / DOCUMENTO]\n\nMês: [${currentMonthKey}]\nAbrindo Arquivo: "${fileName}"\n\nRecibo de Pagamento Associado: [${assocName || 'Sem Associação'}]\n\nDiretório: [${activeDirectory}]`);
+    }
+
+    function downloadSingleFile(fileId) {
+      const files = monthlyFilesData[currentMonthKey][activeDirectory] || [];
+      const file = files.find(f => f.id == fileId);
+      
+      if (!file) return;
+
+      if (file.dataUrl) {
+        const a = document.createElement('a');
+        a.href = file.dataUrl;
+        a.download = file.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        const content = `CONDOMÍNIO EDIFÍCIO ÂNGELA\nMês de Referência: ${currentMonthKey}\nComprovante/Documento: ${file.name}\nLançamento Associado: ${file.assoc}\nData do Anexo: ${file.date}\nDiretório: ${activeDirectory}`;
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name.replace(/\.[^/.]+$/, "") + `_${currentMonthKey.replace('/', '_')}_Comprovante.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    function downloadAllFilesForContabilidade() {
+      const files = monthlyFilesData[currentMonthKey][activeDirectory] || [];
+      if (files.length === 0) {
+        alert(`Nenhum arquivo ou comprovante disponível no mês ${currentMonthKey} (Diretório "${activeDirectory}") para download.`);
+        return;
+      }
+
+      alert(`[CONTABILIDADE] Iniciando o download de ${files.length} comprovante(s) do mês ${currentMonthKey} ("${activeDirectory}")...`);
+
+      files.forEach((file, index) => {
+        setTimeout(() => {
+          downloadSingleFile(file.id);
+        }, index * 400);
+      });
+    }
+
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const title = document.getElementById('doc-title').value.trim();
+      const assoc = document.getElementById('doc-receipt-assoc').value;
+      const fileInput = document.getElementById('doc-file');
+
+      if (fileInput.files.length > 0) {
+        const fileObj = fileInput.files[0];
+        const dateNow = new Date().toLocaleDateString('pt-BR');
+        const fileName = `${title}_${fileObj.name}`;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const base64Data = evt.target.result;
+
+          if (!monthlyFilesData[currentMonthKey]) {
+            monthlyFilesData[currentMonthKey] = {
+              'Comprovantes de Pagamento': [],
+              'Notas Fiscais e Recibos': [],
+              'Manutenções e Obras': []
+            };
+          }
+
+          if (!monthlyFilesData[currentMonthKey][activeDirectory]) {
+            monthlyFilesData[currentMonthKey][activeDirectory] = [];
+          }
+
+          monthlyFilesData[currentMonthKey][activeDirectory].push({
+            id: Date.now(),
+            name: fileName,
+            date: dateNow,
+            assoc: assoc,
+            dataUrl: base64Data
+          });
+
+          saveFilesData();
+          renderFiles();
+
+          document.getElementById('doc-title').value = '';
+          fileInput.value = '';
+          alert(`Documento/Comprovante "${fileName}" salvo em ${currentMonthKey} com sucesso!`);
+        };
+
+        reader.readAsDataURL(fileObj);
+      }
+    });
+
+    function removeFile(id) {
+      if (confirm(`Deseja remover/retificar este documento do mês de ${currentMonthKey}?`)) {
+        monthlyFilesData[currentMonthKey][activeDirectory] = (monthlyFilesData[currentMonthKey][activeDirectory] || []).filter(f => f.id !== id);
+        saveFilesData();
+        renderFiles();
+      }
+    }
+
+    function generatePDF() {
+      syncTableInputsToState();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const monthObj = availableMonths.find(m => m.key === currentMonthKey);
+      const monthLabel = monthObj ? monthObj.label : currentMonthKey;
+      const list = monthlyPayments[currentMonthKey] || [];
+
+      doc.setFontSize(16);
+      doc.setTextColor(30, 58, 138);
+      doc.text("CONDOMÍNIO EDIFÍCIO ÂNGELA", 14, 18);
+
+      doc.setFontSize(11);
+      doc.setTextColor(71, 85, 105);
+      doc.text(`Relatório de Controle Financeiro — ${monthLabel}`, 14, 25);
+
+      const tableData = list.map(p => {
+        const parts = p.date.split('-');
+        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        return [
+          p.desc,
+          `R$ ${p.val.toFixed(2)}`,
+          formattedDate,
+          p.status
+        ];
+      });
+
+      const totalVal = list.reduce((acc, curr) => acc + curr.val, 0);
+      const totalPaidVal = list.filter(p => p.status === 'Pago').reduce((acc, curr) => acc + curr.val, 0);
+      const totalPendingVal = list.filter(p => !p.status || p.status === 'Pendente').reduce((acc, curr) => acc + curr.val, 0);
+
+      doc.autoTable({
+        startY: 32,
+        head: [['Descrição do Pagamento', 'Valor (R$)', 'Vencimento', 'Status']],
+        body: tableData.length > 0 ? tableData : [['Nenhum lançamento registrado', 'R$ 0,00', '-', '-']],
+        theme: 'striped',
+        headStyles: { fillColor: [30, 58, 138], textColor: [255, 255, 255], fontStyle: 'bold' },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 35 }
+        },
+        didParseCell: function(data) {
+          if (data.section === 'body' && data.column.index === 3) {
+            if (data.cell.raw === 'Pago') {
+              data.cell.styles.textColor = [16, 185, 129];
+              data.cell.styles.fontStyle = 'bold';
+            } else if (data.cell.raw === 'Pendente') {
+              data.cell.styles.textColor = [217, 119, 6];
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        }
+      });
+
+      const finalY = doc.lastAutoTable.finalY + 10;
+
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+      doc.text(`TOTAL GERAL DO MÊS: R$ ${totalVal.toFixed(2)}`, 14, finalY);
+      doc.text(`TOTAL PAGO: R$ ${totalPaidVal.toFixed(2)}`, 14, finalY + 6);
+      doc.text(`TOTAL PENDENTE: R$ ${totalPendingVal.toFixed(2)}`, 14, finalY + 12);
+
+      const today = new Date().toLocaleDateString('pt-BR');
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Relatório emitido em ${today} pelo Gestor: Geraldo — Condomínio Edifício Ângela`, 14, finalY + 22);
+
+      const safeName = currentMonthKey.replace('/', '_');
+      doc.save(`Relatorio_Financeiro_${safeName}_Edificio_Angela.pdf`);
+    }
+  </script>
+</body>
+</html>
