@@ -100,7 +100,7 @@
       </div>
     </header>
 
-    <!-- Seletor de Meses Subsequentes (Set/2026 até Dez/2027) -->
+    <!-- Seletor de Meses Subsequentes -->
     <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[65px] z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between overflow-x-auto gap-3">
         <div class="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider shrink-0">
@@ -302,11 +302,12 @@
   </div>
 
   <script>
-    const PAYMENTS_STORAGE_KEY = 'CONDOMINIO_ANGELA_PAYMENTS_PERMANENT_V11';
-    const FILES_STORAGE_KEY = 'CONDOMINIO_ANGELA_FILES_PERMANENT_V11';
+    const PAYMENTS_STORAGE_KEY = 'CONDOMINIO_ANGELA_PAYMENTS_PERMANENT_V12';
+    const FILES_STORAGE_KEY = 'CONDOMINIO_ANGELA_FILES_PERMANENT_V12';
 
-    // Chaves antigas para recuperação automática de dados
+    // Chaves antigas para recuperação e migração transparente de dados
     const OLD_PAYMENT_KEYS = [
+      'CONDOMINIO_ANGELA_PAYMENTS_PERMANENT_V11',
       'CONDOMINIO_ANGELA_PAYMENTS_MASTER_V10',
       'CONDOMINIO_ANGELA_PAYMENTS_MASTER_V9',
       'CONDOMINIO_ANGELA_PAYMENTS_MASTER',
@@ -314,6 +315,7 @@
     ];
 
     const OLD_FILE_KEYS = [
+      'CONDOMINIO_ANGELA_FILES_PERMANENT_V11',
       'CONDOMINIO_ANGELA_FILES_MASTER_V10',
       'CONDOMINIO_ANGELA_FILES_MASTER_V9',
       'CONDOMINIO_ANGELA_FILES_MONTHLY_V8',
@@ -399,30 +401,37 @@
     let monthlyPayments = {};
     let monthlyFilesData = {};
 
-    // Sincroniza em tempo real as entradas de texto/valor da tabela antes de re-renderizar ou salvar
+    // Sincroniza em tempo real o estado dos inputs com os objetos em memória e salva no localStorage
     function syncTableInputsToState() {
       const tbody = document.getElementById('payment-table-body');
       if (!tbody) return;
       const list = monthlyPayments[currentMonthKey] || [];
 
+      let changed = false;
       list.forEach(p => {
         const valInput = document.getElementById(`pay-val-input-${p.id}`);
         const dateInput = document.getElementById(`pay-date-input-${p.id}`);
 
         if (valInput) {
           const parsed = parseFloat(valInput.value);
-          if (!isNaN(parsed) && parsed >= 0) {
+          if (!isNaN(parsed) && parsed >= 0 && p.val !== parsed) {
             p.val = parsed;
+            changed = true;
           }
         }
-        if (dateInput && dateInput.value) {
+        if (dateInput && dateInput.value && p.date !== dateInput.value) {
           p.date = dateInput.value;
+          changed = true;
         }
       });
+
+      if (changed) {
+        saveData();
+      }
     }
 
     function loadData() {
-      // 1. Carregar e Migrar Pagamentos
+      // 1. Carregar e Migrar Pagamentos de forma persistente
       let savedPayments = localStorage.getItem(PAYMENTS_STORAGE_KEY);
       if (!savedPayments) {
         for (const oldKey of OLD_PAYMENT_KEYS) {
@@ -450,7 +459,7 @@
       }
       saveData();
 
-      // 2. Carregar e Migrar Ficheiros / Mídias
+      // 2. Carregar e Migrar Arquivos
       let savedFiles = localStorage.getItem(FILES_STORAGE_KEY);
       if (!savedFiles) {
         monthlyFilesData = JSON.parse(JSON.stringify(initialMonthlyDirectoryData));
@@ -508,6 +517,12 @@
     function saveFilesData() {
       localStorage.setItem(FILES_STORAGE_KEY, JSON.stringify(monthlyFilesData));
     }
+
+    // Salvar estado ao fechar/atualizar a página
+    window.addEventListener('beforeunload', function() {
+      syncTableInputsToState();
+      saveData();
+    });
 
     // Autenticação
     document.getElementById('login-form').addEventListener('submit', function(e) {
@@ -628,7 +643,7 @@
             <td class="py-3 px-4 font-semibold text-slate-900">
               <div class="flex items-center gap-1">
                 <span class="text-xs text-slate-400 font-bold">R$</span>
-                <input type="number" step="0.01" id="pay-val-input-${p.id}" value="${p.val.toFixed(2)}" onblur="updateValue(${p.id}, this.value)" onchange="updateValue(${p.id}, this.value)" class="w-28 px-2 py-1 border border-slate-300 rounded text-xs bg-slate-50 focus:bg-white outline-none focus:ring-1 focus:ring-blue-600 font-semibold text-slate-900">
+                <input type="number" step="0.01" id="pay-val-input-${p.id}" value="${p.val.toFixed(2)}" onblur="updateValue(${p.id}, this.value)" class="w-28 px-2 py-1 border border-slate-300 rounded text-xs bg-slate-50 focus:bg-white outline-none focus:ring-1 focus:ring-blue-600 font-semibold text-slate-900">
               </div>
             </td>
             <td class="py-3 px-4">
@@ -692,7 +707,7 @@
       if (item) {
         item.val = parsedVal;
         saveData();
-        // Atualiza totais sem reconstruir a tabela inteira para não perder o foco
+        
         let total = 0, totalPaid = 0, totalPending = 0;
         list.forEach(p => {
           total += p.val;
@@ -741,7 +756,6 @@
     document.getElementById('payment-form').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      // Sincroniza qualquer alteração aberta na tabela de pagamentos antes de criar a nova entrada
       syncTableInputsToState();
 
       const desc = document.getElementById('pay-desc').value.trim();
